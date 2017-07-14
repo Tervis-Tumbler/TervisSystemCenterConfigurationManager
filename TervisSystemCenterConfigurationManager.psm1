@@ -23,11 +23,11 @@
 
     Foreach ($SCCMComputer in $SCCMComputers) {
         $ADComputer = Get-TervisADComputer ($SCCMComputer).Name -Properties lastlogontimestamp,created 
-        If ($ADComputer -and (($ADComputer).TervisLastLogon -lt (Get-Date).AddDays(-30)) -and (($ADComputer).Created -lt (Get-Date).AddDays(-30)) -and (($SCCMComputer).IsActive -eq $false)) {
+        If ($ADComputer -and (($ADComputer).TervisLastLogon -lt (Get-Date).AddDays(-30)) -and (($ADComputer).Created -lt (Get-Date).AddDays(-30)) -and (($SCCMComputer).IsActive -eq "False")) {
             ($SCCMComputer).Name + " is inactive"
             Remove-CMDevice $SCCMComputer -Force -Confirm:$false
         } elseif (-NOT ($ADComputer)) {
-            if (($SCCMComputer).IsActive -eq $false) {
+            if (($SCCMComputer).IsActive -eq "False") {
                 ($SCCMComputer).Name + " is no longer in AD"
                 Remove-CMDevice $SCCMComputer -Force -Confirm:$false
             }

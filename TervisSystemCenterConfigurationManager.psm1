@@ -42,8 +42,8 @@ function Invoke-SCCM2016Provision {
     Invoke-ApplicationProvision -ApplicationName "SCCM 2016" -EnvironmentName $EnvironmentName
     #$Nodes = Get-TervisApplicationNode -ApplicationName "SCCM 2016" -EnvironmentName $EnvironmentName
     $Nodes | Invoke-SCCMSQLServer2014Install
-    $Nodes | Set-SQLTCPEnabled -InstanceName MSSQL -Architecture x64
-    $Nodes | Set-SQLTCPIPAllTcpPort -InstanceName MSSQL -Architecture x64
+    $Nodes | Set-SQLTCPEnabled -InstanceName MSSQLSERVER -Architecture x64
+    $Nodes | Set-SQLTCPIPAllTcpPort -InstanceName MSSQLSERVER -Architecture x64
     $Nodes | New-SQLNetFirewallRule
 }
 

@@ -34,3 +34,14 @@
         }
     }
 }
+
+function Invoke-SCCM2016Provision {
+    param (
+        $EnvironmentName
+    )
+    Invoke-ApplicationProvision -ApplicationName "SCCM 2016" -EnvironmentName $EnvironmentName
+    #$Nodes = Get-TervisApplicationNode -ApplicationName "SCCM 2016" -EnvironmentName $EnvironmentName
+    $Nodes | Set-SQLTCPEnabled -InstanceName MSSQL -Architecture x64
+    $Nodes | Set-SQLTCPIPAllTcpPort -InstanceName MSSQL -Architecture x64
+    $Nodes | New-SQLNetFirewallRule
+}

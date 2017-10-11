@@ -36,10 +36,7 @@
 }
 
 function Invoke-SCCM2016Provision {
-    param (
-        $EnvironmentName
-    )
-    Invoke-ApplicationProvision -ApplicationName "SCCM 2016" -EnvironmentName $EnvironmentName
+    Invoke-ApplicationProvision -ApplicationName "SCCM 2016" -EnvironmentName Infrastructure
     #$Nodes = Get-TervisApplicationNode -ApplicationName "SCCM 2016" -EnvironmentName $EnvironmentName
     $Nodes | Invoke-SCCMSQLServer2014Install
     $Nodes | Set-SQLTCPEnabled -InstanceName MSSQLSERVER -Architecture x64

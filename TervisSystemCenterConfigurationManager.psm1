@@ -56,12 +56,12 @@ function Invoke-SCCMSQLServer2016Install {
         $SQLSACredentials = Get-PasswordstateCredential -PasswordID ($ApplicationDefinition.Environments).SQLSAPassword -AsPlainText
         $SCCMServiceAccountCredentials = Get-PasswordstateCredential -PasswordID ($ApplicationDefinition.Environments).SCCMServiceAccountPassword -AsPlainText
 	    $ChocolateyPackageParameters = "/SAPWD=$($SQLSACredentials.Password) /AGTSVCACCOUNT=$($SCCMServiceAccountCredentials.Username) /AGTSVCPASSWORD=$($SCCMServiceAccountCredentials.Password) /SQLSVCACCOUNT=$($SCCMServiceAccountCredentials.Username) /SQLSVCPASSWORD=$($SCCMServiceAccountCredentials.Password) /RSSVCACCOUNT=$($SCCMServiceAccountCredentials.Username) /RSSVCPASSWORD=$($SCCMServiceAccountCredentials.Password)"
-        $ChocolateyPackage = '\\' + $DNSRoot + '\Applications\Chocolatey\SQLServer2016.1702.nupkg'
+        $ChocolateyPackage = '\\' + $DNSRoot + '\Applications\Chocolatey\SQLServer2016Standard.2016.1702.0.nupkg'
 
     }
     Process {
 	    Invoke-Command -ComputerName $ComputerName -ScriptBlock {
-		    choco install -y $ChocolateyPackage --package-parameters=$($using:ChocolateyPackageParameters)
+		    choco install SQLServer2016Standard -y -s $Using:ChocolateyPackage --package-parameters=$($using:ChocolateyPackageParameters)
 	    }
     }
 }

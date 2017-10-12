@@ -36,25 +36,32 @@
 }
 
 function Invoke-SCCM2016Provision {
-    Invoke-ApplicationProvision -ApplicationName "SCCM 2016" -EnvironmentName Infrastructure
+    Invoke-ApplicationProvision -ApplicationName "SCCM2016" -EnvironmentName Infrastructure
     #$Nodes = Get-TervisApplicationNode -ApplicationName "SCCM 2016" -EnvironmentName $EnvironmentName
-    $Nodes | Invoke-SCCMSQLServer2014Install
+    $Nodes | Invoke-SCCMSQLServer2016Install
     $Nodes | Set-SQLTCPEnabled -InstanceName MSSQLSERVER -Architecture x64
     $Nodes | Set-SQLTCPIPAllTcpPort -InstanceName MSSQLSERVER -Architecture x64
     $Nodes | New-SQLNetFirewallRule
 }
 
-function Invoke-SCCMSQLServer2014Install {
+function Invoke-SCCMSQLServer2016Install {
     [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter(Mandatory,ValueFromPipeline)]$ComputerName,
         [Parameter(Mandatory,ValueFromPipeline)]$ApplicationName
     )
-	$ApplicationDefinition = Get-TervisApplicationDefinition -Name $ApplicationName
-	$SQLSACredentials = Get-PasswordstateCredential -PasswordID ($ApplicationDefinition.Environments).SQLSAPassword -AsPlainText
-	$SCCMServiceAccountCredentials = Get-PasswordstateCredential -PasswordID ($ApplicationDefinition.Environments).SCCMServiceAccountPassword -AsPlainText
-	$ChocolateyPackageParameters = "/SAPWD=($SQLSACredentials).Password /AGTSVCACCOUNT=($SCCMServiceAccountCredentials).Username /AGTSVCPASSWORD=($SCCMServiceAccountCredentials).Password /SQLSVCACCOUNT=($SCCMServiceAccountCredentials).Username /SQLSVCPASSWORD=($SCCMServiceAccountCredentials).Password /RSSVCACCOUNT=($SCCMServiceAccountCredentials).Username /RSSVCPASSWORD=($SCCMServiceAccountCredentials).Password"
-	Invoke-Command -ComputerName $Node.ComputerName -ScriptBlock {
-		choco install -y "\\tervis.prv\Applications\Chocolatey\SQLServer2014SP2.1.0.1.nupkg" --package-parameters=$($using:ChocolateyPackageParameters)
-	}
+    Begin {
+        $DNSRoot = Get-ADDomain | Select -ExpandProperty DNSRoot
+        $ApplicationDefinition = Get-TervisApplicationDefinition -Name $ApplicationName
+        $SQLSACredentials = Get-PasswordstateCredential -PasswordID ($ApplicationDefinition.Environments).SQLSAPassword -AsPlainText
+        $SCCMServiceAccountCredentials = Get-PasswordstateCredential -PasswordID ($ApplicationDefinition.Environments).SCCMServiceAccountPassword -AsPlainText
+	    $ChocolateyPackageParameters = "/SAPWD=$($SQLSACredentials.Password) /AGTSVCACCOUNT=$($SCCMServiceAccountCredentials.Username) /AGTSVCPASSWORD=$($SCCMServiceAccountCredentials.Password) /SQLSVCACCOUNT=$($SCCMServiceAccountCredentials.Username) /SQLSVCPASSWORD=$($SCCMServiceAccountCredentials.Password) /RSSVCACCOUNT=$($SCCMServiceAccountCredentials.Username) /RSSVCPASSWORD=$($SCCMServiceAccountCredentials.Password)"
+        $ChocolateyPackage = '\\' + $DNSRoot + '\Applications\Chocolatey\SQLServer2016.1702.nupkg'
+
+    }
+    Process {
+	    Invoke-Command -ComputerName $ComputerName -ScriptBlock {
+		    choco install -y $ChocolateyPackage --package-parameters=$($using:ChocolateyPackageParameters)
+	    }
+    }
 }

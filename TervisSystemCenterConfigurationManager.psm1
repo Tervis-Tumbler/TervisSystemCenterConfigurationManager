@@ -75,6 +75,28 @@ function Invoke-SCCMSQLServer2016Install {
     }
 }
 
+function Invoke-SCCM2016Install {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]$ComputerName,
+        [Parameter(Mandatory,ValueFromPipeline)]$ApplicationName
+    )
+    Begin {
+        $DNSRoot = Get-ADDomain | Select -ExpandProperty DNSRoot
+        $ApplicationDefinition = Get-TervisApplicationDefinition -Name $ApplicationName
+        $SCCMLicenseKey = Get-PasswordstateCredential -PasswordID 5112 -AsPlainText | Select -ExpandProperty Password
+        $SCCMServiceAccountCredentials = Get-PasswordstateCredential -PasswordID ($ApplicationDefinition.Environments).SCCMServiceAccountPassword -AsPlainText
+	    $ChocolateyPackageParameters = "/ProductID=$SCCMLicenseKey /SiteCode=THQ /Site name='Tervis Headquarters' /SQLServerName=$ComputerName /DatabaseName=CM_THQ /SQLDataFilePath=D:\Databases\CM_THQ.MDB /SQLLogFilePath=D:\Databases\CM_THQ.LDF /CloudConnector=1 /CloudConnectorServer=sccm.tervis.com /UseProxy=0 /InstallPrimarySite=1 /ManagementPoint=sccm.tervis.com /ManagementPointProtocol=HTTPS /DistributionPoint=sccm.tervis.com /DistributionPointProtocol=HTTPS /RoleCommunicationProtocol=EnforceHTTPS /ClientsUsePKICertificate=1 /CCARSiteServer=sccm.tervis.com"
+        $ChocolateyPackage = '\\' + $DNSRoot + '\Applications\Chocolatey\SCCM.2016.1702.0.nupkg'
+
+    }
+    Process {
+	    Invoke-Command -ComputerName $ComputerName -ScriptBlock {
+		    choco install SCCM2016 -y -s $Using:ChocolateyPackage --package-parameters=$($using:ChocolateyPackageParameters)
+	    }
+    }
+}
+
 function Add-SCCMDataDrive {
     param (
         [Parameter(Mandatory,ValueFromPipeline)]$ComputerName,

@@ -37,11 +37,13 @@
 
 function Invoke-SCCM2016Provision {
     Invoke-ApplicationProvision -ApplicationName "SCCM2016" -EnvironmentName Infrastructure
-    #$Nodes = Get-TervisApplicationNode -ApplicationName "SCCM 2016" -EnvironmentName Infrastructure
+    $Nodes = Get-TervisApplicationNode -ApplicationName "SCCM 2016" -EnvironmentName Infrastructure
     $Nodes = Get-TervisApplicationNode -ApplicationName SCCM2016 -EnvironmentName Infrastructure
     $Nodes | Add-SCCMDataDrive
     $Nodes | Invoke-SCCMSQLServer2016Install
     $Nodes | New-SQLNetFirewallRule
+    $Nodes | Set-SCCMSystemManagementOUPermissions
+    #$Nodes | Invoke-SCCM2016Install
 }
 
 function Invoke-SCCMSQLServer2016Install {
@@ -87,9 +89,8 @@ function Invoke-SCCM2016Install {
         $SCCMLicenseKey = Get-PasswordstateCredential -PasswordID 5112 -AsPlainText | Select -ExpandProperty Password
         Get-PasswordstateDocument -DocumentID '16' -FilePath "C:\Temp\ConfigMgrAutoSave.ini"
         $SCCMServiceAccountCredentials = Get-PasswordstateCredential -PasswordID ($ApplicationDefinition.Environments).SCCMServiceAccountPassword -AsPlainText
-	    $ChocolateyPackageParameters = "/ProductID=$SCCMLicenseKey /SiteCode=THQ /Site name='Tervis Headquarters' /SQLServerName=$ComputerName /DatabaseName=CM_THQ /SQLDataFilePath=D:\Databases\CM_THQ.MDB /SQLLogFilePath=D:\Databases\CM_THQ.LDF /CloudConnector=1 /CloudConnectorServer=sccm.tervis.com /UseProxy=0 /InstallPrimarySite=1 /ManagementPoint=sccm.tervis.com /ManagementPointProtocol=HTTPS /DistributionPoint=sccm.tervis.com /DistributionPointProtocol=HTTPS /RoleCommunicationProtocol=EnforceHTTPS /ClientsUsePKICertificate=1 /CCARSiteServer=sccm.tervis.com"
+	    $ChocolateyPackageParameters = "/ProductID=$SCCMLicenseKey /SiteCode=THQ /Site name=Tervis-Headquarters /SQLServerName=$ComputerName /DatabaseName=CM_THQ /SQLDataFilePath=D:\Databases\CM_THQ.MDB /SQLLogFilePath=D:\Databases\CM_THQ.LDF /CloudConnector=1 /CloudConnectorServer=sccm.tervis.com /UseProxy=0 /InstallPrimarySite=1 /ManagementPoint=sccm.tervis.com /ManagementPointProtocol=HTTPS /DistributionPoint=sccm.tervis.com /DistributionPointProtocol=HTTPS /RoleCommunicationProtocol=EnforceHTTPS /ClientsUsePKICertificate=1 /CCARSiteServer=sccm.tervis.com"
         $ChocolateyPackage = '\\' + $DNSRoot + '\Applications\Chocolatey\SCCM2016.2016.1702.0.nupkg'
-
     }
     Process {
         Invoke-Command -ComputerName $ComputerName -ScriptBlock {
@@ -125,4 +126,17 @@ function Add-SCCMDataDrive {
             New-Partition -AssignDriveLetter -UseMaximumSize |
             Format-Volume -FileSystem NTFS -Confirm:$false -Force
     }
+}
+
+function Set-SCCMSystemManagementOUPermissions {
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]$ComputerName
+    )
+    $Domain = Get-ADDomain | Select -ExpandProperty DistinguishedName
+    $OU = 'CN=System Management,CN=System,' + $Domain
+    $ComputerSID = Get-ADComputer $ComputerName -Properties SID | Select -ExpandProperty SID
+    $objACL = Get-ACL "AD:\\${OU}"
+    $objACE = New-Object System.DirectoryServices.ActiveDirectoryAccessRule($ComputerSID,"GenericAll","Allow",'All',[guid]'00000000-0000-0000-0000-000000000000')
+    $objACL.AddAccessRule($objACE)
+    Set-acl -AclObject $objACL "AD:${OU}"
 }

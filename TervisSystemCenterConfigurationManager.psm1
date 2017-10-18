@@ -40,6 +40,7 @@ function Invoke-SCCM2016Provision {
     $Nodes = Get-TervisApplicationNode -ApplicationName "SCCM 2016" -EnvironmentName Infrastructure
     $Nodes = Get-TervisApplicationNode -ApplicationName SCCM2016 -EnvironmentName Infrastructure
     $Nodes | Add-SCCMDataDrive
+    $Nodes | Set-SccmVmMemory
     $Nodes | Invoke-SCCMSQLServer2016Install
     $Nodes | New-SQLNetFirewallRule
     $Nodes | Set-SccmSqlMinMaxMemory
@@ -162,5 +163,17 @@ function Set-SccmSqlMinMaxMemory {
             Restart-Service MSSQLSERVER -Force
             Sleep 30
         }
+    }
+}
+
+function Set-SccmVmMemory {
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]$ComputerName,
+        [Parameter(Mandatory,ValueFromPipeline)]$IPAddress
+    )
+    $VM = Find-TervisVMByIP $IPAddress
+    $VmMemory = Get-VMMemory -ComputerName ($VM).ComputerName -VMName $ComputerName
+    if (-NOT (($VmMemory).Startup -eq "17179869184")) {
+        Set-VMMemory -StartupBytes "17179869184" -VMName $ComputerName -ComputerName ($VM).ComputerName
     }
 }

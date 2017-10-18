@@ -42,6 +42,7 @@ function Invoke-SCCM2016Provision {
     $Nodes | Add-SCCMDataDrive
     $Nodes | Invoke-SCCMSQLServer2016Install
     $Nodes | New-SQLNetFirewallRule
+    $Nodes | Set-SccmSqlMinMaxMemory
     $Nodes | Set-SCCMSystemManagementOUPermissions
     #$Nodes | Invoke-SCCM2016Install
 }
@@ -139,4 +140,27 @@ function Set-SCCMSystemManagementOUPermissions {
     $objACE = New-Object System.DirectoryServices.ActiveDirectoryAccessRule($ComputerSID,"GenericAll","Allow",'All',[guid]'00000000-0000-0000-0000-000000000000')
     $objACL.AddAccessRule($objACE)
     Set-acl -AclObject $objACL "AD:${OU}"
+}
+
+function Set-SccmSqlMinMaxMemory {
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]$ComputerName
+    )
+    Invoke-Command -ComputerName $ComputerName -ScriptBlock {
+        [System.Reflection.Assembly]::LoadWithPartialName(‘Microsoft.SqlServer.SMO’) | out-null
+        $SqlConfig = New-Object (‘Microsoft.SqlServer.Management.Smo.Server’) $Using:ComputerName
+        if (-NOT (($SqlConfig).Configuration.MinServerMemory.ConfigValue -eq "8192")) {
+            $SqlConfig.Configuration.MinServerMemory.ConfigValue = 8192
+            $Change = "1"
+        }
+        if (-NOT (($SqlConfig).Configuration.MaxServerMemory.ConfigValue -eq "10240")) {
+            $SqlConfig.Configuration.MaxServerMemory.ConfigValue = 10240
+            $Change = "1"
+        }
+        if ($Change) {
+            $SqlConfig.Configuration.Alter()
+            Restart-Service MSSQLSERVER -Force
+            Sleep 30
+        }
+    }
 }

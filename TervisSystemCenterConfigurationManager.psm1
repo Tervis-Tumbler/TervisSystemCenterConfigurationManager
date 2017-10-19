@@ -91,7 +91,7 @@ function Invoke-SCCM2016Install {
         $SCCMLicenseKey = Get-PasswordstateCredential -PasswordID 5112 -AsPlainText | Select -ExpandProperty Password
         Get-PasswordstateDocument -DocumentID '16' -FilePath "C:\Temp\ConfigMgrAutoSave.ini"
         $SCCMServiceAccountCredentials = Get-PasswordstateCredential -PasswordID ($ApplicationDefinition.Environments).SCCMServiceAccountPassword -AsPlainText
-	    $ChocolateyPackageParameters = "/ProductID=$SCCMLicenseKey /SiteCode=THQ /Site name=Tervis-Headquarters /SQLServerName=$ComputerName /DatabaseName=CM_THQ /SQLDataFilePath=D:\Databases\CM_THQ.MDB /SQLLogFilePath=D:\Databases\CM_THQ.LDF /CloudConnector=1 /CloudConnectorServer=sccm.tervis.com /UseProxy=0 /InstallPrimarySite=1 /ManagementPoint=sccm.tervis.com /ManagementPointProtocol=HTTPS /DistributionPoint=sccm.tervis.com /DistributionPointProtocol=HTTPS /RoleCommunicationProtocol=EnforceHTTPS /ClientsUsePKICertificate=1 /CCARSiteServer=sccm.tervis.com"
+	    $ChocolateyPackageParameters = "/SDKINST=sccm.tervis.com"
         $ChocolateyPackage = '\\' + $DNSRoot + '\Applications\Chocolatey\SCCM2016.2016.1702.0.nupkg'
     }
     Process {

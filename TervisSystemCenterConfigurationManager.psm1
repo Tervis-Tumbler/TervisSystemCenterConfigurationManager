@@ -57,8 +57,8 @@ function Invoke-SCCMSQLServer2016Install {
     Begin {
         $DNSRoot = Get-ADDomain | Select -ExpandProperty DNSRoot
         $ApplicationDefinition = Get-TervisApplicationDefinition -Name $ApplicationName
-        $SQLSACredentials = Get-PasswordstateCredential -PasswordID ($ApplicationDefinition.Environments).SQLSAPassword -AsPlainText
-        $SCCMServiceAccountCredentials = Get-PasswordstateCredential -PasswordID ($ApplicationDefinition.Environments).SCCMServiceAccountPassword -AsPlainText
+        $SQLSACredentials = Get-PasswordstatePassword -ID ($ApplicationDefinition.Environments).SQLSAPassword
+        $SCCMServiceAccountCredentials = Get-PasswordstatePassword -ID ($ApplicationDefinition.Environments).SCCMServiceAccountPassword
         Invoke-Command -ComputerName $ComputerName -ScriptBlock {
             If (-NOT (Test-Path "D:\Databases")) {
                 New-Item -Path "D:\Databases" -ItemType directory
@@ -88,9 +88,9 @@ function Invoke-SCCM2016Install {
     Begin {
         $DNSRoot = Get-ADDomain | Select -ExpandProperty DNSRoot
         $ApplicationDefinition = Get-TervisApplicationDefinition -Name $ApplicationName
-        $SCCMLicenseKey = Get-PasswordstateCredential -PasswordID 5112 -AsPlainText | Select -ExpandProperty Password
+        $SCCMLicenseKey = Get-PasswordstatePassword -ID 5112 | Select -ExpandProperty Password
         TervisPasswordstatePowershell\Get-PasswordstateDocument -DocumentID '16' -FilePath "C:\Temp\ConfigMgrAutoSave.ini"
-        $SCCMServiceAccountCredentials = Get-PasswordstateCredential -PasswordID ($ApplicationDefinition.Environments).SCCMServiceAccountPassword -AsPlainText
+        $SCCMServiceAccountCredentials = Get-PasswordstatePassword -ID ($ApplicationDefinition.Environments).SCCMServiceAccountPassword
 	    $ChocolateyPackageParameters = "/SDKINST=sccm.tervis.com"
         $ChocolateyPackage = '\\' + $DNSRoot + '\Applications\Chocolatey\SCCM2016.2016.1702.0.nupkg'
     }

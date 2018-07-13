@@ -89,7 +89,7 @@ function Invoke-SCCM2016Install {
         $DNSRoot = Get-ADDomain | Select -ExpandProperty DNSRoot
         $ApplicationDefinition = Get-TervisApplicationDefinition -Name $ApplicationName
         $SCCMLicenseKey = Get-PasswordstatePassword -ID 5112 | Select -ExpandProperty Password
-        TervisPasswordstatePowershell\Get-PasswordstateDocument -DocumentID '16' -FilePath "C:\Temp\ConfigMgrAutoSave.ini"
+        Get-PasswordstateDocument -DocumentID 16 -DocumentLocation password -OutFile "C:\Temp\ConfigMgrAutoSave.ini"
         $SCCMServiceAccountCredentials = Get-PasswordstatePassword -ID ($ApplicationDefinition.Environments).SCCMServiceAccountPassword
 	    $ChocolateyPackageParameters = "/SDKINST=sccm.tervis.com"
         $ChocolateyPackage = '\\' + $DNSRoot + '\Applications\Chocolatey\SCCM2016.2016.1702.0.nupkg'

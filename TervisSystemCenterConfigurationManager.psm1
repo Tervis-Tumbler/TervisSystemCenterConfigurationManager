@@ -35,13 +35,13 @@
     }
 }
 
-function Invoke-SCCM2016Provision {
-    Invoke-ApplicationProvision -ApplicationName "SCCM2016" -EnvironmentName Infrastructure
-    $Nodes = Get-TervisApplicationNode -ApplicationName "SCCM 2016" -EnvironmentName Infrastructure
-    $Nodes = Get-TervisApplicationNode -ApplicationName SCCM2016 -EnvironmentName Infrastructure
+function Invoke-SCCM2019Provision {
+    Invoke-ApplicationProvision -ApplicationName "SCCM2019" -EnvironmentName Infrastructure
+    $Nodes = Get-TervisApplicationNode -ApplicationName "SCCM 2019" -EnvironmentName Infrastructure
+    $Nodes = Get-TervisApplicationNode -ApplicationName SCCM2019 -EnvironmentName Infrastructure
     $Nodes | Add-SCCMDataDrive
     $Nodes | Set-SccmVmMemory
-    $Nodes | Invoke-SCCMSQLServer2016Install
+    $Nodes | Invoke-SCCMSQLServer2019Install
     $Nodes | New-SQLNetFirewallRule
     $Nodes | Set-SccmSqlMinMaxMemory
     $Nodes | Set-SCCMSystemManagementOUPermissions
